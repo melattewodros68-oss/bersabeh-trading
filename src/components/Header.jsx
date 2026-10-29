@@ -25,7 +25,7 @@ export default function Header() {
   return (
     <header className="header">
       <Link className="logo" href="/">
-        <span className="logo-mark">✈️</span>
+        <img className="logo-img" src="/logo-plane.jpg" alt="Bersabeh Trading airplane logo" />
         <span><span className="logo-name">{BUSINESS.name}</span><small>{BUSINESS.tagline}</small></span>
       </Link>
       <nav className="nav">

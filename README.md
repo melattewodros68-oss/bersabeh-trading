@@ -1,4 +1,12 @@
-# Bersabeh Trading — Flight Request & Ticketing Webapp (Rebuild v1.2)
+# Bersabeh Trading — Flight Request & Ticketing Webapp (Rebuild v1.3)
+
+"> **v1.3 changes:** realistic airplane logo image (`public/logo-plane.jpg`,
+> header/login/footer/favicon), larger Bersabeh Trading wordmark, and a
+> **LuBella Technology** developer credit in the footer with clickable
+> WhatsApp/call/email/Telegram (edit `src/lib/developer.js`). Updating a
+> deployed site: see **UPDATE-V1.3.md** — delete `src/lib/config.js` from
+> the extracted copy before uploading to protect your real payment accounts.
+>
 
 > **v1.2 changes:** bold Ethiopian redesign (new layout, hero photo in
 > `public/hero.jpg`, refreshed staff/admin) + **Change email** action in
