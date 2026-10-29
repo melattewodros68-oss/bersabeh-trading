@@ -1,4 +1,12 @@
-# Bersabeh Trading — Flight Request & Ticketing Webapp (Rebuild v1.1)
+# Bersabeh Trading — Flight Request & Ticketing Webapp (Rebuild v1.2)
+
+> **v1.2 changes:** bold Ethiopian redesign (new layout, hero photo in
+> `public/hero.jpg`, refreshed staff/admin) + **Change email** action in
+> Admin (handover-friendly; bookings follow the user to the new email).
+> Updating a deployed v1.1: see **UPDATE-V1.2.md** — IMPORTANT, delete
+> `src/lib/config.js` from the extracted copy before uploading so your
+> real payment accounts in GitHub are not overwritten.
+>
 
 > **v1.1 changes:** dual-mode database (free PostgreSQL via `DATABASE_URL`,
 > e.g. Neon — otherwise local file for dev), demo-password hint removed from

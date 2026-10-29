@@ -42,9 +42,41 @@ export default function HomePage() {
 
   return (
     <>
-      <section className="hero"><h1>✈️ {t('hero_title')}</h1><p>{t('hero_sub')}</p></section>
-      <form className="card" onSubmit={submit}>
-        <h2>{t('contact')}</h2>
+      <section className="hero">
+        <div className="hero-grid">
+          <div>
+            <span className="kicker">🇪🇹 {t('hero_kicker')}</span>
+            <h1>{t('hero_title')}</h1>
+            <p>{t('hero_sub')}</p>
+            <div className="trust-row">
+              <span className="trust-chip">{t('chip1')}</span>
+              <span className="trust-chip">{t('chip2')}</span>
+              <span className="trust-chip">{t('chip3')}</span>
+            </div>
+          </div>
+          <img className="hero-img" src="/hero.jpg" alt="Airplane taking off over Addis Ababa at golden hour" />
+        </div>
+      </section>
+
+      <section className="how">
+        <h2 className="section-title">{t('how_title')}</h2>
+        <div className="how-grid">
+          <div className="how-card"><div className="how-num">1</div><b>{t('s1t')}</b><p className="muted">{t('s1d')}</p></div>
+          <div className="how-card"><div className="how-num">2</div><b>{t('s2t')}</b><p className="muted">{t('s2d')}</p></div>
+          <div className="how-card"><div className="how-num">3</div><b>{t('s3t')}</b><p className="muted">{t('s3d')}</p></div>
+          <div className="how-card"><div className="how-num">4</div><b>{t('s4t')}</b><p className="muted">{t('s4d')}</p></div>
+        </div>
+      </section>
+
+      <p className="muted" style={{ fontWeight: 700 }}>{t('popular')}</p>
+      <div className="dest-chips">
+        {['DXB — Dubai (DXB)', 'IST — Istanbul (IST)', 'DOH — Doha (DOH)', 'LHR — London Heathrow (LHR)', 'JED — Jeddah (JED)', 'NBO — Nairobi (NBO)'].map(d => (
+          <button key={d} type="button" className="chip" onClick={() => { setTrip(tr => ({ ...tr, to: d })); document.getElementById('book-form')?.scrollIntoView({ behavior: 'smooth' }); }}>✈️ {d}</button>
+        ))}
+      </div>
+
+      <form className="card" id="book-form" onSubmit={submit}>
+        <h2><span className="step-no">1</span>{t('contact')}</h2>
         {error && <div className="error">{error}</div>}
         <div className="row3">
           <div className="form-group"><label htmlFor="cname">{t('full_name')} *</label>
@@ -55,7 +87,7 @@ export default function HomePage() {
             <input id="cemail" className="input" type="email" required value={contact.email} onChange={e => setContact({ ...contact, email: e.target.value })} /></div>
         </div>
 
-        <h2>{t('trip')}</h2>
+        <h2><span className="step-no">2</span>{t('trip')}</h2>
         <datalist id="airports">{BUSINESS.airports.map(a => <option key={a} value={a} />)}</datalist>
         <div className="row3">
           <div className="form-group"><label>{t('trip_type')}</label>
@@ -78,7 +110,7 @@ export default function HomePage() {
               <option value="Economy">{t('economy')}</option><option value="Business">{t('business')}</option><option value="First">{t('first')}</option></select></div>
         </div>
 
-        <h2>{t('passengers')} ({passengers.length})</h2>
+        <h2><span className="step-no">3</span>{t('passengers')} ({passengers.length})</h2>
         {passengers.map((p, i) => (
           <div key={i} style={{ border: '1px solid var(--gray-200)', borderRadius: 8, padding: '1rem', marginBottom: '1rem' }}>
             <div className="flex space"><b>#{i + 1}</b>

@@ -24,6 +24,13 @@ export const dict = {
     status_NEW: 'New request', status_UNDER_REVIEW: 'Under review', status_QUOTED: 'Quoted — your action needed',
     status_AWAITING_PAYMENT: 'Awaiting payment', status_CONFIRMED: 'Payment confirmed', status_ISSUED: 'Ticket issued', status_CANCELLED: 'Cancelled',
     office: 'Bole, Addis Ababa', hours: 'Office hours',
+    hero_kicker: 'Addis Ababa · Ticket Office', chip1: '💬 Real agents on WhatsApp', chip2: '💳 Telebirr & CBE', chip3: '🎫 PNR + e-ticket in the app',
+    how_title: 'How it works',
+    s1t: 'Send your request', s1d: 'Tell us route, dates and passengers. You get a booking reference instantly.',
+    s2t: 'Get your quote', s2d: 'An agent finds flights and sends the full itinerary and one total price here.',
+    s3t: 'Pay & confirm', s3d: 'Accept, pay by Telebirr/CBE/bank, send the reference — we verify it.',
+    s4t: 'Fly with your e-ticket', s4d: 'Your PNR and ticket numbers appear on the tracking page. Print and travel.',
+    popular: 'Popular destinations — tap to fill:',
   },
   am: {
     nav_home: 'በረራ ይጠይቁ', nav_track: 'ቦታ ማስያዣ ይከታተሉ', nav_staff: 'የሰራተኞች መግቢያ',
@@ -50,6 +57,13 @@ export const dict = {
     status_NEW: 'አዲስ ጥያቄ', status_UNDER_REVIEW: 'በግምገማ ላይ', status_QUOTED: 'ዋጋ ተልኳል — የእርስዎ ውሳኔ ያስፈልጋል',
     status_AWAITING_PAYMENT: 'ክፍያ በመጠባበቅ', status_CONFIRMED: 'ክፍያ ተረጋግጧል', status_ISSUED: 'ትኬት ተሰጥቷል', status_CANCELLED: 'ተሰርዟል',
     office: 'Addis Ababa፣ Addis Ababa', hours: 'የስራ ሰዓት',
+    hero_kicker: 'አዲስ አበባ · የትኬት ጽ/ቤት', chip1: '💬 በዋትስአፕ እውነተኛ ወኪሎች', chip2: '💳 ቴሌብር እና ሲቢኢ', chip3: '🎫 PNR + ኢ-ትኬት በመተግበሪያው',
+    how_title: 'እንዴት ይሰራል',
+    s1t: 'ጥያቄዎን ላኩ', s1d: 'መንገድ፣ ቀንና ተጓዦችን ይንገሩን። ወዲያው የማጣቀሻ ቁጥር ያገኛሉ።',
+    s2t: 'ዋጋ ይቀበሉ', s2d: 'ወኪላችን በረራዎችን አግኝቶ ሙሉ መርሃ ግብርና አንድ ጠቅላላ ዋጋ እዚህ ይልካል።',
+    s3t: 'ይክፈሉና ያረጋግጡ', s3d: 'ተቀብለው በቴሌብር/ሲቢኢ/ባንክ ይክፈሉ፣ ማጣቀሻውን ላኩ — እናረጋግጠዋለን።',
+    s4t: 'በኢ-ትኬትዎ ይብረሩ', s4d: 'PNR እና የትኬት ቁጥሮችዎ በክትትል ገጽ ላይ ይታያሉ። አትመው ይጓዙ።',
+    popular: 'ታዋቂ መዳረሻዎች — ለመሙላት ይንኩ:',
   },
 };
 export const statusLabel = (lang, s) => (dict[lang] && dict[lang]['status_' + s]) || dict.en['status_' + s] || s;

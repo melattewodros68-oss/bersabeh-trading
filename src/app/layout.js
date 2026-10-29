@@ -14,17 +14,19 @@ export default function RootLayout({ children }) {
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Ethiopic:wght@400;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Ethiopic:wght@400;600;700;800&display=swap" rel="stylesheet" />
       </head>
       <body>
         <LangProvider>
+          <div className="stripe" aria-hidden="true" />
           <Header />
           <main className="main">{children}</main>
+          <div className="stripe" aria-hidden="true" />
           <footer className="footer">
             <div className="in">
-              <div><b>{BUSINESS.name}</b><br />{BUSINESS.tagline}<br />{BUSINESS.address}</div>
-              <div><b>Contact</b><br />📞 {BUSINESS.phone}<br />✉️ {BUSINESS.email}</div>
-              <div><b>Office hours</b><br />{BUSINESS.hours}<br />WhatsApp: {BUSINESS.whatsapp}</div>
+              <div><span className="foot-brand">✈️ {BUSINESS.name}</span><br />{BUSINESS.tagline}<br />📍 {BUSINESS.address}</div>
+              <div><b>Contact us</b><br />📞 {BUSINESS.phone}<br />💬 WhatsApp: {BUSINESS.whatsapp}<br />✉️ {BUSINESS.email}</div>
+              <div><b>Payments we verify</b><br />Telebirr · CBE · Bank transfer · Cash at office<br /><b>Office hours:</b> {BUSINESS.hours}</div>
             </div>
           </footer>
         </LangProvider>

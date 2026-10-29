@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { readDB, writeDB } from '../../../../../lib/store.js';
 import { requireStaff, jsonError, jsonOk } from '../../../../../lib/auth.js';
+import { clean, isEmail } from '../../../../../lib/domain.js';
 
 export async function POST(req) {
   const { user: admin, error } = await requireStaff(req, ['ADMIN']);
@@ -24,6 +25,16 @@ export async function POST(req) {
     if (pw.length < 10) return jsonError('Temporary password must be at least 10 characters.');
     target.passwordHash = bcrypt.hashSync(pw, 10);
     target.mustChangePassword = true;
+  } else if (action === 'changeEmail') {
+    const newEmail = clean(body?.newEmail, 200).toLowerCase();
+    if (!isEmail(newEmail)) return jsonError('Please provide a valid new email address.');
+    if (db.users.some(u => u.id !== target.id && u.email.toLowerCase() === newEmail)) return jsonError('Another user already has this email.', 409);
+    const oldEmail = target.email;
+    target.email = newEmail;
+    // Keep the agent's bookings attached to them under the new email.
+    (db.bookings || []).forEach(b => {
+      if ((b.assignedTo || '').toLowerCase() === String(oldEmail).toLowerCase()) b.assignedTo = newEmail;
+    });
   } else return jsonError('Unknown action.');
   await writeDB(db);
   return jsonOk({ message: 'User updated' });

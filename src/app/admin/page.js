@@ -81,6 +81,7 @@ export default function AdminPage() {
               <td><div className="flex">
                 <button className="btn btn-ghost btn-sm" onClick={() => userAction(u.id, u.active ? 'deactivate' : 'activate')}>{u.active ? 'Deactivate' : 'Activate'}</button>
                 <button className="btn btn-ghost btn-sm" onClick={() => { const pw = window.prompt('New temporary password (min 10 chars):'); if (pw) userAction(u.id, 'resetPassword', { newPassword: pw }); }}>Reset pw</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => { const em = window.prompt('New login email for ' + u.fullName + ':', u.email); if (em && em !== u.email) userAction(u.id, 'changeEmail', { newEmail: em }); }}>Change email</button>
               </div></td></tr>
           ))}</tbody></table></div>
         <h3>Add staff user</h3>

@@ -20,21 +20,25 @@ export default function Header() {
     try { await api('/api/auth/logout', { method: 'POST' }); } catch {}
     setMe(null); router.push('/'); router.refresh();
   };
+  const cls = (href) => (pathname === href ? 'active' : '');
 
   return (
     <header className="header">
-      <Link className="logo" href="/">✈️ {BUSINESS.name}<small>{BUSINESS.tagline}</small></Link>
+      <Link className="logo" href="/">
+        <span className="logo-mark">✈️</span>
+        <span><span className="logo-name">{BUSINESS.name}</span><small>{BUSINESS.tagline}</small></span>
+      </Link>
       <nav className="nav">
-        <Link href="/">{t('nav_home')}</Link>
-        <Link href="/track">{t('nav_track')}</Link>
+        <Link className={cls('/')} href="/">{t('nav_home')}</Link>
+        <Link className={cls('/track')} href="/track">{t('nav_track')}</Link>
         {me ? (
           <>
-            <Link href="/staff">{t('nav_dashboard')}</Link>
-            {me.role === 'ADMIN' && <Link href="/admin">{t('nav_admin')}</Link>}
+            <Link className={cls('/staff')} href="/staff">{t('nav_dashboard')}</Link>
+            {me.role === 'ADMIN' && <Link className={cls('/admin')} href="/admin">{t('nav_admin')}</Link>}
             <button className="btn btn-ghost btn-sm" onClick={logout}>{t('logout')} ({me.fullName?.split(' ')[0]})</button>
           </>
         ) : (
-          <Link href="/login">{t('nav_staff')}</Link>
+          <Link className={cls('/login')} href="/login">{t('nav_staff')}</Link>
         )}
         <button className="lang-btn" onClick={() => setLang(lang === 'en' ? 'am' : 'en')}>
           {lang === 'en' ? 'አማርኛ' : 'English'}

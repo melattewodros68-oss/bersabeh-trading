@@ -19,6 +19,11 @@ export default function LoginPage() {
   }
   return (
     <div className="card" style={{ maxWidth: 430, margin: '2rem auto' }}>
+      <div className="brand-box">
+        <div className="logo-mark">✈️</div>
+        <div className="logo-name">Bersabeh Trading</div>
+        <span className="muted small">Staff workspace</span>
+      </div>
       <h2>Staff login</h2>
       {error && <div className="error">{error}</div>}
       <form onSubmit={submit}>

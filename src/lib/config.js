@@ -2,9 +2,9 @@
 export const BUSINESS = {
   name: 'Bersabeh Trading',
   tagline: 'Flight ticket office — Addis Ababa',
-  phone: '+251 967942524',
-  whatsapp: '+251967942524',
-  email: 'melattewodros68@gmail.com',
+  phone: '+251 911 234 567',
+  whatsapp: '+251911234567',
+  email: 'info@example.com',
   address: 'Bole, Addis Ababa, Ethiopia',
   hours: 'Mon–Sat 8:30–18:00',
   // Shown to the customer at payment stage. Replace with real accounts.
