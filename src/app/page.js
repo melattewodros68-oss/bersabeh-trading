@@ -56,7 +56,7 @@ export default function HomePage() {
           </div>
           <div className="hero-img-wrap">
             <img className="hero-img" src="/hero-et.jpg" alt="Ethiopian Airlines style airplane with green, gold and red tail taking off over Addis Ababa" />
-            <img className="hero-flag-badge" src="/logo-flag.svg" alt="Ethiopian flag emblem" />
+            <img className="hero-flag-badge" src="/logo-wing.png" alt="Ethiopian-inspired green, gold and red wing emblem" />
           </div>
         </div>
       </section>

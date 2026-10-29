@@ -10,7 +10,7 @@ a{color:var(--primary)}
 .header{background:rgba(255,255,255,.96);backdrop-filter:blur(8px);padding:.8rem 1.25rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;box-shadow:0 4px 18px rgba(11,110,79,.12);position:sticky;top:0;z-index:50}
 .logo{display:flex;align-items:center;gap:.65rem;text-decoration:none;color:var(--primary-dark)}
 .logo-mark{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--green),var(--primary-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 6px 14px rgba(7,137,48,.35);border:2px solid var(--gold)}
-.logo-img{width:96px;height:60px;object-fit:cover;object-position:center;border-radius:14px;border:2.5px solid var(--gold);box-shadow:0 6px 14px rgba(7,137,48,.3);flex-shrink:0;background:var(--primary-dark)}
+.logo-img{width:122px;height:64px;object-fit:contain;object-position:center;flex-shrink:0;background:transparent}
 .logo-name{font-size:1.95rem;font-weight:900;letter-spacing:-.01em;line-height:1.05}
 .logo small{display:block;font-size:.8rem;font-weight:700;color:var(--gold-dark);letter-spacing:.14em;text-transform:uppercase}
 .nav{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap}
@@ -97,13 +97,13 @@ td{padding:.62rem;border-bottom:1px solid var(--gray-200);vertical-align:top}
 .space{justify-content:space-between}
 .mt{margin-top:1rem}.mb{margin-bottom:1rem}
 .brand-box{text-align:center;margin-bottom:1.1rem}
-.brand-logo-img{width:150px;height:96px;object-fit:cover;object-position:center;border-radius:18px;border:3px solid var(--gold);box-shadow:0 10px 22px rgba(7,137,48,.3);margin:0 auto .55rem;display:block;background:var(--primary-dark)}
+.brand-logo-img{width:220px;height:122px;object-fit:contain;object-position:center;margin:0 auto .55rem;display:block;background:transparent}
 .footer{background:#063d2b;color:#d8e9d8;padding:1.8rem 1.25rem 2rem;margin-top:2rem}
 .footer .in{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.2rem}
 .footer b{color:#fff}
 .footer .foot-brand{font-size:1.5rem;font-weight:900}
 .foot-logo-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem}
-.foot-logo-img{width:64px;height:42px;object-fit:cover;object-position:center;border-radius:10px;border:2px solid var(--gold);flex-shrink:0;background:var(--primary-dark)}
+.foot-logo-img{width:88px;height:50px;object-fit:contain;object-position:center;border-radius:10px;flex-shrink:0;background:#fff;padding:4px}
 .footer a{color:#ffd75e;font-weight:700;text-decoration:none}
 .footer a:hover{text-decoration:underline}
 .dev-credit{background:rgba(255,255,255,.07);border:1.5px solid rgba(242,183,5,.55);border-left:6px solid var(--gold);border-radius:14px;padding:.95rem 1.05rem}
@@ -113,19 +113,19 @@ td{padding:.62rem;border-bottom:1px solid var(--gray-200);vertical-align:top}
 .spinner{border:3px solid var(--gray-200);border-top:3px solid var(--primary);border-radius:50%;width:34px;height:34px;animation:spin 1s linear infinite;margin:2rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:820px){.hero-grid{grid-template-columns:1fr}.hero h1{font-size:1.75rem}.hero-img{min-height:180px}}
-@media(max-width:700px){.logo-name{font-size:1.5rem}.logo-img{width:78px;height:50px}.header{flex-direction:column;align-items:flex-start}.card{padding:1.15rem}.hero{padding:1.15rem}}
+@media(max-width:700px){.logo-name{font-size:1.5rem}.logo-img{width:96px;height:52px}.header{flex-direction:column;align-items:flex-start}.card{padding:1.15rem}.hero{padding:1.15rem}}
 @media print{.header,.footer,.stripe,.no-print{display:none!important}.main{max-width:none;margin:0}body{background:#fff}.card{box-shadow:none;border:1px solid #ccc}}
 
 /* v1.4: hero flag badge + hamburger staff drawer */
 .hero-img-wrap{position:relative}
-.hero-flag-badge{position:absolute;right:14px;bottom:14px;width:84px;height:84px;border-radius:18px;border:3px solid #fff;box-shadow:0 10px 22px rgba(0,0,0,.35);background:#fff}
+.hero-flag-badge{position:absolute;right:14px;bottom:14px;width:122px;height:78px;object-fit:contain;padding:7px;border-radius:18px;border:3px solid #fff;box-shadow:0 10px 22px rgba(0,0,0,.35);background:#fff}
 .card[id],form[id]{scroll-margin-top:120px}
 .menu-btn{display:inline-flex;align-items:center;gap:.4rem}
 .drawer-backdrop{position:fixed;inset:0;background:rgba(12,26,18,.55);z-index:90}
 .drawer{position:fixed;top:0;left:0;height:100dvh;width:310px;max-width:86vw;background:#fff;z-index:100;box-shadow:18px 0 44px rgba(0,0,0,.3);padding:1.1rem;overflow-y:auto;animation:slidein .22s ease-out;border-right:6px solid var(--gold)}
 @keyframes slidein{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 .drawer-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem}
-.drawer-head img{width:52px;height:52px;border-radius:12px;border:2px solid var(--gold);object-fit:cover}
+.drawer-head img{width:72px;height:46px;object-fit:contain}
 .drawer-head b{font-size:1.05rem;color:var(--primary-dark);line-height:1.1}
 .drawer-close{margin-left:auto;background:var(--gray-100);border:none;width:38px;height:38px;border-radius:50%;font-size:1.05rem;cursor:pointer}
 .drawer h4{margin:1.05rem 0 .45rem;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gray-600)}
@@ -133,5 +133,5 @@ td{padding:.62rem;border-bottom:1px solid var(--gray-200);vertical-align:top}
 .drawer-link:hover{background:var(--gray-100)}
 .drawer-link.active{background:var(--primary);color:#fff}
 .drawer-user{background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:12px;padding:.65rem .8rem;font-size:.9rem}
-@media(max-width:700px){.hero-flag-badge{width:62px;height:62px}}
+@media(max-width:700px){.hero-flag-badge{width:94px;height:62px}}
 @media print{.drawer,.drawer-backdrop{display:none!important}}

@@ -59,7 +59,7 @@ export default function Header() {
     <>
       <header className="header">
         <Link className="logo" href="/">
-          <img className="logo-img" src="/logo-flag.svg" alt="Ethiopian flag emblem" />
+          <img className="logo-img" src="/logo-wing.png" alt="Ethiopian-inspired green, gold and red wing emblem" />
           <span><span className="logo-name">{BUSINESS.name}</span><small>{BUSINESS.tagline}</small></span>
         </Link>
         <nav className="nav">
@@ -89,7 +89,7 @@ export default function Header() {
           <div className="drawer-backdrop" onClick={() => setMenuOpen(false)} />
           <aside className="drawer" aria-label="Staff menu">
             <div className="drawer-head">
-              <img src="/logo-flag.svg" alt="" />
+              <img src="/logo-wing.png" alt="" />
               <b>{BUSINESS.name}<br /><span className="muted small">Staff menu</span></b>
               <button type="button" className="drawer-close" aria-label="Close menu" onClick={() => setMenuOpen(false)}>✕</button>
             </div>

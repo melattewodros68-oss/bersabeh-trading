@@ -1,10 +1,10 @@
-# Bersabeh Trading — Flight Request & Ticketing Webapp (Rebuild v1.4)
+# Bersabeh Trading — Flight Request & Ticketing Webapp (Rebuild v1.4.1)
 
-"> **v1.4 changes:** original Ethiopian-flag emblem masthead
-> (`public/logo-flag.svg`), Ethiopian-livery hero photo with flag badge
+"> **v1.4 changes:** Ethiopian-inspired wing emblem masthead
+> (`public/logo-wing.png`), Ethiopian-livery hero photo with wing badge
 > (`public/hero-et.jpg`), and a **hamburger staff menu** in the sticky header
 > for agent/admin pages (work queues + on-page section shortcuts). Updating:
-> see **UPDATE-V1.4.md** — delete `src/lib/config.js` from the extracted copy
+> see **UPDATE-V1.4.1.md** — delete `src/lib/config.js` from the extracted copy
 > before uploading to protect your real payment accounts.
 >
 
