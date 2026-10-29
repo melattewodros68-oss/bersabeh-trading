@@ -14,7 +14,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/logo-plane.jpg" type="image/jpeg" />
+        <link rel="icon" href="/logo-flag.svg" type="image/svg+xml" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Ethiopic:wght@400;600;700;800&display=swap" rel="stylesheet" />
       </head>
@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
           <div className="stripe" aria-hidden="true" />
           <footer className="footer">
             <div className="in">
-              <div><div className="foot-logo-row"><img className="foot-logo-img" src="/logo-plane.jpg" alt="Bersabeh Trading airplane logo" /><span className="foot-brand">{BUSINESS.name}</span></div>{BUSINESS.tagline}<br />📍 {BUSINESS.address}</div>
+              <div><div className="foot-logo-row"><img className="foot-logo-img" src="/logo-flag.svg" alt="Bersabeh Trading airplane logo" /><span className="foot-brand">{BUSINESS.name}</span></div>{BUSINESS.tagline}<br />📍 {BUSINESS.address}</div>
               <div><b>Contact us</b><br />📞 {BUSINESS.phone}<br />💬 WhatsApp: {BUSINESS.whatsapp}<br />✉️ {BUSINESS.email}</div>
               <div><b>Payments we verify</b><br />Telebirr · CBE · Bank transfer · Cash at office<br /><b>Office hours:</b> {BUSINESS.hours}</div>
               <div className="dev-credit">

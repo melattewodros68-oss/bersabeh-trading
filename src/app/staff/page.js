@@ -29,6 +29,13 @@ export default function StaffPage() {
   useEffect(() => {
     api('/api/auth/me').then(d => setMe(d.user)).catch(() => router.push('/login'));
   }, [router]);
+  useEffect(() => {
+    const sc = new URLSearchParams(window.location.search).get('scope');
+    if (['new', 'mine', 'all'].includes(sc)) setScope(sc);
+    const onScope = (e) => { if (['new', 'mine', 'all'].includes(e.detail)) setScope(e.detail); };
+    window.addEventListener('bt-scope', onScope);
+    return () => window.removeEventListener('bt-scope', onScope);
+  }, []);
   useEffect(() => { if (me) load(); }, [me, load]);
 
   async function take(id) {
@@ -80,7 +87,7 @@ export default function StaffPage() {
           </div>
         ))}
       </div>
-      <form className="card" onSubmit={changePassword}>
+      <form className="card" id="change-password" onSubmit={changePassword}>
         <h2>Change my password</h2>
         {pwMsg && <p className="mb">{pwMsg}</p>}
         <div className="row">

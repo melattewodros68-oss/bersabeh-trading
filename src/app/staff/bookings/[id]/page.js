@@ -48,7 +48,7 @@ export default function BookingWorkspace() {
   return (
     <>
       <p className="no-print"><Link href="/staff">← Back to dashboard</Link></p>
-      <div className="card">
+      <div className="card" id="overview">
         <div className="flex space"><h2 style={{ border: 'none', margin: 0 }}>{b.ref}</h2><span className={`badge b-${b.status}`}>{statusLabel('en', b.status)}</span></div>
         {error && <div className="error mt">{error}</div>}
         <p className="mt"><b>{b.contact.name}</b> · 📞 {b.contact.phone} · ✉️ {b.contact.email}<br />
@@ -61,7 +61,7 @@ export default function BookingWorkspace() {
           <tbody>{b.passengers.map(p => <tr key={p.id}><td><b>{p.fullName}</b></td><td>{p.type}</td><td>{p.dob || '-'}</td><td>{p.gender || '-'}</td><td>{p.nationality}</td><td>{p.passportNo || <i>not yet</i>}</td><td>{p.passportExpiry || '-'}</td></tr>)}</tbody></table></div>
       </div>
 
-      <div className="card">
+      <div className="card" id="flights">
         <h2>Flights & quote</h2>
         {(b.flights || []).map(f => (
           <div className="flight" key={f.id}>
@@ -112,7 +112,7 @@ export default function BookingWorkspace() {
         )}
       </div>
 
-      <div className="card">
+      <div className="card" id="payments">
         <h2>Payments</h2>
         {(b.payments || []).length === 0 && <p className="muted">No payments yet.</p>}
         {(b.payments || []).map(p => (
@@ -156,7 +156,7 @@ export default function BookingWorkspace() {
           <span className="muted">By {b.ticket.issuedBy} · {fmtDateTime(b.ticket.issuedAt)}</span></p></div>
       )}
 
-      <div className="card">
+      <div className="card" id="messages">
         <h2>Messages & internal notes</h2>
         <div className="msgs">
           {(b.messages || []).map(m => (
@@ -184,7 +184,7 @@ export default function BookingWorkspace() {
         </div>
       )}
 
-      <div className="card">
+      <div className="card" id="audit">
         <h2>Audit trail</h2>
         {(b.audit || []).slice().reverse().map(a => (
           <p key={a.id} className="small"><span className="muted">{fmtDateTime(a.at)}</span> · <b>{a.action}</b> · {a.actor} {a.details && <>— {a.details}</>}</p>

@@ -54,7 +54,10 @@ export default function HomePage() {
               <span className="trust-chip">{t('chip3')}</span>
             </div>
           </div>
-          <img className="hero-img" src="/hero.jpg" alt="Airplane taking off over Addis Ababa at golden hour" />
+          <div className="hero-img-wrap">
+            <img className="hero-img" src="/hero-et.jpg" alt="Ethiopian Airlines style airplane with green, gold and red tail taking off over Addis Ababa" />
+            <img className="hero-flag-badge" src="/logo-flag.svg" alt="Ethiopian flag emblem" />
+          </div>
         </div>
       </section>
 

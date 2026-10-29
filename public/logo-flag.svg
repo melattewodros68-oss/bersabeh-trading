@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Ethiopian flag emblem">
+  <defs>
+    <clipPath id="r"><rect x="4" y="4" width="504" height="504" rx="92"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)">
+    <rect width="512" height="171" fill="#078930"/>
+    <rect y="171" width="512" height="170" fill="#f9d616"/>
+    <rect y="341" width="512" height="171" fill="#da121a"/>
+    <circle cx="256" cy="256" r="118" fill="#0f47af" stroke="#ffffff" stroke-opacity="0.25" stroke-width="4"/>
+    <g stroke="#fcdd09" stroke-width="9" stroke-linecap="round">
+      <line x1="256" y1="168" x2="256" y2="151"/>
+      <line x1="339.7" y1="228.8" x2="355.9" y2="223.6"/>
+      <line x1="307.7" y1="327.2" x2="317.7" y2="341"/>
+      <line x1="204.3" y1="327.2" x2="194.3" y2="341"/>
+      <line x1="172.3" y1="228.8" x2="156.1" y2="223.6"/>
+    </g>
+    <polygon fill="#fcdd09" points="256,178 274.2,230.9 330.2,231.9 285.5,265.6 301.9,319.1 256,287 210.1,319.1 226.5,265.6 181.8,231.9 237.8,230.9"/>
+  </g>
+  <rect x="4" y="4" width="504" height="504" rx="92" fill="none" stroke="#0b6e4f" stroke-width="8"/>
+</svg>

@@ -54,12 +54,12 @@ export default function AdminPage() {
             <div className="stat"><div className="v">{stats.awaitingVerification}</div><div className="l">Payments to verify</div></div>
             <div className="stat"><div className="v">{stats.activeAgents}</div><div className="l">Active agents</div></div>
           </div>
-          <div className="card"><h2>Bookings by status & confirmed revenue</h2>
+          <div className="card" id="stats"><h2>Bookings by status & confirmed revenue</h2>
             <div className="flex">{Object.entries(stats.byStatus).map(([s, n]) => <span key={s} className={`badge b-${s}`}>{statusLabel('en', s)}: {n}</span>)}</div>
             <div className="mt">{Object.entries(stats.revenue).length === 0 ? <span className="muted">No confirmed revenue yet.</span> :
               Object.entries(stats.revenue).map(([c, v]) => <p key={c}><b>{c}:</b> {fmtMoney(v, c)}</p>)}</div>
           </div>
-          <div className="card"><h2>Recent bookings</h2>
+          <div className="card" id="recent"><h2>Recent bookings</h2>
             {recent.map(b => (
               <div className="list-item" key={b.id}><div className="flex space">
                 <span><b>{b.ref}</b> · {b.name} · {b.from} → {b.to} · {b.departDate}<br /><span className="muted small">{b.assignedTo || 'Unassigned'} · {fmtDateTime(b.createdAt)}</span></span>
@@ -70,7 +70,7 @@ export default function AdminPage() {
           </div>
         </>
       )}
-      <div className="card">
+      <div className="card" id="users">
         <h2>Staff users</h2>
         <div className="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th>Last login</th><th>Actions</th></tr></thead>
           <tbody>{users.map(u => (

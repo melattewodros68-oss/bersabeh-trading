@@ -20,7 +20,7 @@ export default function LoginPage() {
   return (
     <div className="card" style={{ maxWidth: 430, margin: '2rem auto' }}>
       <div className="brand-box">
-        <img className="brand-logo-img" src="/logo-plane.jpg" alt="Bersabeh Trading airplane logo" />
+        <img className="brand-logo-img" src="/logo-flag.svg" alt="Bersabeh Trading airplane logo" />
         <div className="logo-name">Bersabeh Trading</div>
         <span className="muted small">Staff workspace</span>
       </div>
