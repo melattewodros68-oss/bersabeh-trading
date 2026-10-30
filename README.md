@@ -1,4 +1,13 @@
-# Bersabeh Trading — Flight Request & Ticketing Webapp (Rebuild v1.4.1)
+# Bersabeh Trading — Flight Request & Ticketing Webapp (Rebuild v1.5)
+
+"> **v1.5 changes:** simpler/friendlier staff hamburger menu with live queue
+> badges, a **Reports** section (`/staff/reports`: period filters, revenue,
+> destinations, airlines, payment methods, team performance, CSV downloads),
+> and **PWA installability** (manifest + icons + service worker + install
+> banner — Android installs it as a real full-screen app). Updating: see
+> **UPDATE-V1.5.md** — delete `src/lib/config.js` from the extracted copy
+> before uploading to protect your real payment accounts.
+>
 
 "> **v1.4 changes:** Ethiopian-inspired wing emblem masthead
 > (`public/logo-wing.png`), Ethiopian-livery hero photo with wing badge
