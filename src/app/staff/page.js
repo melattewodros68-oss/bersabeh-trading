@@ -59,6 +59,9 @@ export default function StaffPage() {
         <div className="stat"><div className="v">{counts.mine ?? 0}</div><div className="l">My active bookings</div></div>
         <div className="stat"><div className="v">{counts.completed ?? 0}</div><div className="l">My issued tickets</div></div>
       </div>
+      <div className="flex mb no-print">
+        <Link className="btn btn-outline" href="/staff/reports">📊 Open Reports — sales, destinations & team</Link>
+      </div>
       <div className="card">
         <div className="tabs">
           {[['new', 'New requests'], ['mine', 'Mine'], ...(me.role === 'ADMIN' ? [['all', 'All bookings']] : [])].map(([s, label]) => (

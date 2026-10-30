@@ -1,6 +1,8 @@
 import './globals.css';
 import { LangProvider } from '@/components/Lang.jsx';
 import Header from '@/components/Header.jsx';
+import RegisterSW from '@/components/RegisterSW.jsx';
+import InstallApp from '@/components/InstallApp.jsx';
 import { BUSINESS } from '@/lib/config.js';
 import { DEVELOPER } from '@/lib/developer.js';
 
@@ -15,6 +17,13 @@ export default function RootLayout({ children }) {
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/logo-wing.png" type="image/png" />
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content="#0b6e4f" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Bersabeh" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Ethiopic:wght@400;600;700;800&display=swap" rel="stylesheet" />
       </head>
@@ -22,6 +31,8 @@ export default function RootLayout({ children }) {
         <LangProvider>
           <div className="stripe" aria-hidden="true" />
           <Header />
+          <RegisterSW />
+          <InstallApp />
           <main className="main">{children}</main>
           <div className="stripe" aria-hidden="true" />
           <footer className="footer">

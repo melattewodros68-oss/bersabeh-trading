@@ -10,6 +10,7 @@ export default function Header() {
   const { lang, setLang, t } = useLang();
   const [me, setMe] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [counts, setCounts] = useState(null);
   const pathname = usePathname() || '/';
   const router = useRouter();
 
@@ -17,6 +18,10 @@ export default function Header() {
     api('/api/auth/me').then(d => setMe(d.user)).catch(() => setMe(null));
     setMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (menuOpen && me) api('/api/staff/bookings?scope=mine').then(d => setCounts(d.counts)).catch(() => {});
+  }, [menuOpen, me]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -62,10 +67,10 @@ export default function Header() {
           <img className="logo-img" src="/logo-wing.png" alt="Ethiopian-inspired green, gold and red wing emblem" />
           <span><span className="logo-name">{BUSINESS.name}</span><small>{BUSINESS.tagline}</small></span>
         </Link>
-        <nav className="nav">
+        <nav className={isStaffArea ? 'nav staff-nav' : 'nav'}>
           {me && isStaffArea && (
             <button type="button" className="btn btn-primary btn-sm menu-btn" aria-expanded={menuOpen}
-              aria-label="Open staff menu" onClick={() => setMenuOpen(true)}>☰ Staff menu</button>
+              aria-label="Open menu" onClick={() => setMenuOpen(true)}>☰ Menu</button>
           )}
           <Link className={cls('/')} href="/">{t('nav_home')}</Link>
           <Link className={cls('/track')} href="/track">{t('nav_track')}</Link>
@@ -90,21 +95,22 @@ export default function Header() {
           <aside className="drawer" aria-label="Staff menu">
             <div className="drawer-head">
               <img src="/logo-wing.png" alt="" />
-              <b>{BUSINESS.name}<br /><span className="muted small">Staff menu</span></b>
+              <b>{BUSINESS.name}<br /><span className="muted small">What do you want to do?</span></b>
               <button type="button" className="drawer-close" aria-label="Close menu" onClick={() => setMenuOpen(false)}>✕</button>
             </div>
             <div className="drawer-user">👤 <b>{me.fullName}</b><br /><span className="muted">{me.email} · {me.role}</span></div>
 
-            <h4>Work queues</h4>
-            <button type="button" className="drawer-link" onClick={() => scopeGo('new')}>🆕 New requests</button>
-            <button type="button" className="drawer-link" onClick={() => scopeGo('mine')}>📁 My bookings</button>
+            <h4>My work</h4>
+            <Link className={`drawer-link ${pathname === '/staff' ? 'active' : ''}`} href="/staff" onClick={() => setMenuOpen(false)}>🏠 Dashboard</Link>
+            <button type="button" className="drawer-link" onClick={() => scopeGo('new')}>🆕 New requests{counts?.new > 0 && <span className="menu-badge">{counts.new}</span>}</button>
+            <button type="button" className="drawer-link" onClick={() => scopeGo('mine')}>📁 My bookings{counts?.mine > 0 && <span className="menu-badge gold">{counts.mine}</span>}</button>
             {me.role === 'ADMIN' && <button type="button" className="drawer-link" onClick={() => scopeGo('all')}>🗂️ All bookings</button>}
-            <Link className={`drawer-link ${pathname.startsWith('/staff') ? 'active' : ''}`} href="/staff" onClick={() => setMenuOpen(false)}>📋 Staff dashboard</Link>
+            <Link className={`drawer-link ${pathname === '/staff/reports' ? 'active' : ''}`} href="/staff/reports" onClick={() => setMenuOpen(false)}>📊 Reports</Link>
 
             {me.role === 'ADMIN' && (
               <>
-                <h4>Admin</h4>
-                <Link className={`drawer-link ${pathname === '/admin' ? 'active' : ''}`} href="/admin" onClick={() => setMenuOpen(false)}>🛡️ Admin dashboard</Link>
+                <h4>Manage</h4>
+                <Link className={`drawer-link ${pathname === '/admin' ? 'active' : ''}`} href="/admin" onClick={() => setMenuOpen(false)}>🛡️ Admin overview</Link>
                 <Link className="drawer-link" href="/admin#users" onClick={() => setMenuOpen(false)}>👥 Staff users & emails</Link>
               </>
             )}
@@ -118,11 +124,10 @@ export default function Header() {
               </>
             )}
 
-            <h4>Customer view</h4>
-            <Link className="drawer-link" href="/" onClick={() => setMenuOpen(false)}>🏠 Request a flight (home)</Link>
+            <h4>More</h4>
+            <Link className="drawer-link" href="/" onClick={() => setMenuOpen(false)}>✈️ Customer home page</Link>
             <Link className="drawer-link" href="/track" onClick={() => setMenuOpen(false)}>🔎 Track booking</Link>
 
-            <h4>Account</h4>
             {pathname !== '/staff' && <Link className="drawer-link" href="/staff#change-password" onClick={() => setMenuOpen(false)}>🔑 Change my password</Link>}
             <button type="button" className="drawer-link" onClick={logout}>🚪 {t('logout')}</button>
           </aside>
