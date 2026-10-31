@@ -1,6 +1,7 @@
 import { readDB, writeDB } from '../../../../lib/store.js';
 import { jsonError, jsonOk } from '../../../../lib/auth.js';
-import { STATUS, uid, newBookingRef, clean, isEmail, isPastDate, audit } from '../../../../lib/domain.js';
+import { STATUS, uid, newBookingRef, newAccessToken, normaliseAuthorization, clean, isEmail, isPastDate, audit } from '../../../../lib/domain.js';
+import { BUSINESS } from '../../../../lib/config.js';
 
 export async function POST(req) {
   let body; try { body = await req.json(); } catch { return jsonError('Invalid request body'); }
@@ -30,6 +31,12 @@ export async function POST(req) {
   if (trip.type === 'return' && (!trip.returnDate || trip.returnDate < trip.departDate)) return jsonError('Return date must be on or after the departure date.');
   if (passengers.length < 1 || passengers.some(p => !p.fullName)) return jsonError('Please add at least one passenger full name.');
 
+  const authorization = normaliseAuthorization(body?.authorization);
+  if (!BUSINESS.currencies.includes(authorization.currency)) authorization.currency = 'ETB';
+  if (authorization.mode === 'PREAPPROVED' && !authorization.maxTotal) {
+    return jsonError('Please enter the maximum total you approve, or turn off “Approve now”.');
+  }
+
   const db = await readDB();
   // Basic duplicate guard: same email + route + date created in last 5 minutes
   const fiveMinAgo = Date.now() - 5 * 60 * 1000;
@@ -43,10 +50,16 @@ export async function POST(req) {
     id: uid('bk'), ref: newBookingRef(existing), status: STATUS.NEW,
     createdAt: now, updatedAt: now, contact, trip, passengers,
     assignedTo: null, flights: [], payments: [], messages: [], ticket: null,
+    authorization, approvalCheck: null, autoApprovedAt: null,
+    accessToken: newAccessToken(),
     language: body?.language === 'am' ? 'am' : 'en', audit: [],
   };
   audit(booking, 'customer', 'REQUEST_SUBMITTED', `${trip.from} -> ${trip.to} on ${trip.departDate}`);
+  if (authorization.mode === 'PREAPPROVED') {
+    audit(booking, 'customer', 'QUOTE_PREAPPROVED',
+      `Up to ${authorization.maxTotal} ${authorization.currency}; date flexibility ±${authorization.dateFlexibilityDays} day(s)${authorization.directOnly ? '; direct only' : ''}`);
+  }
   db.bookings.push(booking);
   await writeDB(db);
-  return jsonOk({ ref: booking.ref, message: 'Request received' }, 201);
+  return jsonOk({ ref: booking.ref, accessToken: booking.accessToken, message: 'Request received' }, 201);
 }

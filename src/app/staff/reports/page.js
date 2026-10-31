@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { api, fmtMoney } from '@/lib/client.js';
+import { api, fmtMoney, PAGE_REFRESH_EVENT } from '@/lib/client.js';
 import { statusLabel } from '@/lib/i18n.js';
 
 const localISO = (d) => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); };
@@ -49,11 +49,32 @@ export default function ReportsPage() {
       const q = new URLSearchParams({ from, to });
       if (agent) q.set('agent', agent);
       setData(await api(`/api/staff/reports?${q.toString()}`));
-    } catch (e) { setError(e.message); } finally { setBusy(false); }
-  }, [from, to, agent]);
+    } catch (e) { if (e.status === 401) router.push('/login'); else setError(e.message); } finally { setBusy(false); }
+  }, [from, to, agent, router]);
 
-  useEffect(() => { api('/api/auth/me').then(d => setMe(d.user)).catch(() => router.push('/login')); }, [router]);
+  const loadMe = useCallback(async () => {
+    try { const d = await api('/api/auth/me'); setMe(d.user); return d.user; }
+    catch (e) {
+      if (e.status === 401) { router.push('/login'); return null; }
+      setError('Could not check your login (server may be waking up). Check your connection, then tap ↻ Refresh at the top.');
+      return null;
+    }
+  }, [router]);
+
+  useEffect(() => { loadMe(); }, [loadMe]);
   useEffect(() => { if (me) load(); }, [me, load]);
+
+  const refreshData = useCallback(async () => {
+    setError('');
+    if (me) { await load(); return; }
+    const user = await loadMe();
+    if (user) await load();
+  }, [me, load, loadMe]);
+  useEffect(() => {
+    const onRefresh = (e) => { e.detail.handled = true; e.detail.done = refreshData(); };
+    window.addEventListener(PAGE_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(PAGE_REFRESH_EVENT, onRefresh);
+  }, [refreshData]);
 
   const applyPreset = (p) => {
     setPreset(p);
@@ -64,7 +85,9 @@ export default function ReportsPage() {
     else if (p === 'month') { const d = new Date(); setFrom(localISO(new Date(d.getFullYear(), d.getMonth(), 1))); setTo(t); }
   };
 
-  if (!me) return <div className="spinner" />;
+  if (!me) return error
+    ? <div className="card"><div className="error">{error}</div></div>
+    : <div className="spinner" />;
   const s = data?.summary;
   const statusItems = s ? Object.entries(s.byStatus).map(([k, v]) => ({ label: statusLabel('en', k), value: v })).sort((a, b) => b.value - a.value) : [];
 
@@ -97,19 +120,19 @@ export default function ReportsPage() {
           )}
         </div>
         <div className="flex">
-          <button className="btn btn-primary btn-sm" disabled={busy} onClick={load}>{busy ? 'Loading…' : '↻ Refresh'}</button>
-          <button className="btn btn-outline btn-sm" disabled={!data} onClick={() => downloadCSV(`bersabeh-bookings-${from}-to-${to}.csv`, data.bookingRows, [
+          <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={load}>{busy ? 'Loading…' : '↻ Refresh'}</button>
+          <button type="button" className="btn btn-outline btn-sm" disabled={!data} onClick={() => downloadCSV(`bersabeh-bookings-${from}-to-${to}.csv`, data.bookingRows, [
             { key: 'ref', label: 'Reference' }, { key: 'created', label: 'Created' }, { key: 'customer', label: 'Customer' },
             { key: 'phone', label: 'Phone' }, { key: 'email', label: 'Email' }, { key: 'route', label: 'Route' },
             { key: 'departDate', label: 'Departure' }, { key: 'passengers', label: 'Passengers' }, { key: 'status', label: 'Status' },
             { key: 'agent', label: 'Agent' }, { key: 'quoted', label: 'Quoted' }, { key: 'paid', label: 'Paid' }, { key: 'pnr', label: 'PNR' },
           ])}>⬇ Bookings CSV</button>
-          <button className="btn btn-outline btn-sm" disabled={!data} onClick={() => downloadCSV(`bersabeh-payments-${from}-to-${to}.csv`, data.paymentRows, [
+          <button type="button" className="btn btn-outline btn-sm" disabled={!data} onClick={() => downloadCSV(`bersabeh-payments-${from}-to-${to}.csv`, data.paymentRows, [
             { key: 'date', label: 'Date' }, { key: 'bookingRef', label: 'Booking' }, { key: 'customer', label: 'Customer' },
             { key: 'method', label: 'Method' }, { key: 'amount', label: 'Amount' }, { key: 'currency', label: 'Currency' },
             { key: 'status', label: 'Status' }, { key: 'reference', label: 'Transaction reference' },
           ])}>⬇ Payments CSV</button>
-          <button className="btn btn-ghost btn-sm" onClick={() => window.print()}>🖨 Print report</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => window.print()}>🖨 Print report</button>
         </div>
       </div>
 

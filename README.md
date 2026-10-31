@@ -1,4 +1,14 @@
-# Bersabeh Trading — Flight Request & Ticketing Webapp (Rebuild v1.5)
+# Bersabeh Trading — Flight Request & Ticketing Webapp (Rebuild v1.6)
+
+"> **v1.6 changes:** navigation reliability fix (buttons no longer land on
+> the wrong staff screen) + a global **↻ Refresh** button in the header on
+> every page (data screens refresh in place without losing typed work).
+> Safer PWA service worker (`bersabeh-v1.6-1`, router/API requests never
+> cached), login redirects only on a real 401, stable header while auth
+> loads, explicit button types, 44px tap targets. Updating: see
+> **UPDATE-V1.6.md** — delete `src/lib/config.js` from the extracted copy
+> before uploading to protect your real payment accounts.
+>
 
 "> **v1.5 changes:** simpler/friendlier staff hamburger menu with live queue
 > badges, a **Reports** section (`/staff/reports`: period filters, revenue,

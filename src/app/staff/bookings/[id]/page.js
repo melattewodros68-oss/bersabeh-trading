@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { api, fmtMoney, fmtDateTime } from '@/lib/client.js';
+import { api, fmtMoney, fmtDateTime, PAGE_REFRESH_EVENT } from '@/lib/client.js';
 import { BUSINESS } from '@/lib/config.js';
 import { statusLabel } from '@/lib/i18n.js';
 
@@ -22,16 +22,27 @@ export default function BookingWorkspace() {
   const [ticketNos, setTicketNos] = useState([]);
   const [cancelReason, setCancelReason] = useState('');
   const [msg, setMsg] = useState({ channel: 'CUSTOMER', text: '' });
+  const [copiedLink, setCopiedLink] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async ({ preserveForms = false } = {}) => {
     try {
       const d = await api(`/api/staff/bookings/${id}`);
       setBooking(d.booking); setTotals(d.totals);
-      setTicketNos((d.booking.passengers || []).map(() => ''));
-      setFlight(f => ({ ...f, from: d.booking.trip.from, to: d.booking.trip.to, departDate: d.booking.trip.departDate, fareClass: d.booking.trip.cabin }));
-    } catch (e) { if (String(e.message).includes('log in')) router.push('/login'); else setError(e.message); }
+      setTicketNos(prev => (d.booking.passengers || []).map((_, i) => (preserveForms ? (prev[i] || '') : '')));
+      if (!preserveForms) {
+        setFlight(f => ({ ...f, from: d.booking.trip.from, to: d.booking.trip.to, departDate: d.booking.trip.departDate, fareClass: d.booking.trip.cabin }));
+      }
+    } catch (e) { if (e.status === 401) router.push('/login'); else setError(e.message); }
   }, [id, router]);
   useEffect(() => { load(); }, [load]);
+
+  // Global Refresh: reload this booking without wiping anything the
+  // agent has typed into the flight/payment/ticket/message boxes.
+  useEffect(() => {
+    const onRefresh = (e) => { e.detail.handled = true; e.detail.done = load({ preserveForms: true }); };
+    window.addEventListener(PAGE_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(PAGE_REFRESH_EVENT, onRefresh);
+  }, [load]);
 
   async function act(action, extra = {}) {
     setError(''); setBusy(true);
@@ -40,11 +51,24 @@ export default function BookingWorkspace() {
       setBooking(d.booking); setTotals(d.totals);
       if (action === 'addFlight') setFlight(f => ({ ...emptyFlight, from: f.from, to: f.to }));
       if (action === 'message') setMsg({ channel: 'CUSTOMER', text: '' });
-    } catch (e) { setError(e.message); } finally { setBusy(false); }
+    } catch (e) { if (e.status === 401) router.push('/login'); else setError(e.message); } finally { setBusy(false); }
+  }
+
+  async function copyCustomerLink(text) {
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    setCopiedLink(true); setTimeout(() => setCopiedLink(false), 1800);
   }
 
   if (!booking) return error ? <div className="error">{error}</div> : <div className="spinner" />;
   const b = booking;
+  const customerLink = b.accessToken ? `${window.location.origin}/track?t=${encodeURIComponent(b.accessToken)}` : '';
+  const waPhone = (() => { let d = String(b.contact.phone || '').replace(/\D/g, ''); if (d.startsWith('0')) d = '251' + d.slice(1); return d; })();
+  const customerWaText = `Hello ${b.contact.name}, your ${BUSINESS.name} booking ${b.ref} live page is here: ${customerLink}\nYour quote, payment instructions and e-ticket will appear on this page. Please keep the link private.`;
+  const auth = b.authorization || { mode: 'ASK' };
   return (
     <>
       <p className="no-print"><Link href="/staff">← Back to dashboard</Link></p>
@@ -55,7 +79,36 @@ export default function BookingWorkspace() {
           <b>{b.trip.from} → {b.trip.to}</b> · {b.trip.departDate}{b.trip.type === 'return' && <> → {b.trip.returnDate}</>} · {b.trip.cabin}<br />
           <span className="muted">Assigned: {b.assignedTo || 'Unassigned'} · Created {fmtDateTime(b.createdAt)}</span></p>
         {b.trip.notes && <p className="notice mt">Customer notes: {b.trip.notes}</p>}
-        {(!b.assignedTo || b.status === 'NEW') && <button className="btn btn-primary btn-sm mt" disabled={busy} onClick={() => act('assign')}>Take / assign to me</button>}
+        {(!b.assignedTo || b.status === 'NEW') && <button type="button" className="btn btn-primary btn-sm mt" disabled={busy} onClick={() => act('assign')}>Take / assign to me</button>}
+        {auth.mode === 'PREAPPROVED' ? (
+          <div className="auth-box mt">
+            <b>⚡ Customer approved in advance</b>
+            <p>Up to <b>{fmtMoney(auth.maxTotal, auth.currency)}</b> total · dates {Number(auth.dateFlexibilityDays) ? `±${auth.dateFlexibilityDays} day(s)` : 'exact only'} · {auth.directOnly ? 'direct/non-stop only' : 'stopovers allowed'}</p>
+            <p className="muted">When you press <b>Send quote</b>, the app checks the route, dates, travel class and total. If everything matches, payment opens immediately — no separate customer Accept tap. If anything differs, the customer must Accept/Reject as before.</p>
+            {b.approvalCheck && (
+              b.approvalCheck.eligible
+                ? <p className="check-ok">✓ Last check: quote matched and was auto-approved.</p>
+                : <><p className="check-bad">Last check did not match:</p><ul className="reason-list">{(b.approvalCheck.reasons || []).map((r, i) => <li key={i}>{r}</li>)}</ul></>
+            )}
+            {b.autoApprovedAt && <p className="muted small">Auto-approved {fmtDateTime(b.autoApprovedAt)}</p>}
+          </div>
+        ) : <p className="notice mt">Customer chose: <b>show the quote first</b> — they will Accept/Reject before payment.</p>}
+        <div className="link-box no-print">
+          <b>🔗 Customer live booking page</b>
+          {customerLink ? (
+            <>
+              <div className="link-url">{customerLink}</div>
+              <div className="flex">
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => copyCustomerLink(customerLink)}>{copiedLink ? 'Copied ✓' : '📋 Copy link'}</button>
+                <a className="btn btn-primary btn-sm" href={`https://wa.me/${waPhone}?text=${encodeURIComponent(customerWaText)}`} target="_blank" rel="noreferrer">WhatsApp link to customer</a>
+                <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { if (window.confirm('Create a NEW customer link? The old link will stop working.')) act('newLink'); }}>New link (old one stops working)</button>
+              </div>
+              <p className="muted small">Anyone with this link can open this one booking. Send it only to the customer on this booking.</p>
+            </>
+          ) : (
+            <><p className="muted">No live link yet (older booking).</p><button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => act('newLink')}>Create customer live link</button></>
+          )}
+        </div>
         <h3>Passengers</h3>
         <div className="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>DOB</th><th>Gender</th><th>Nationality</th><th>Passport</th><th>Expiry</th></tr></thead>
           <tbody>{b.passengers.map(p => <tr key={p.id}><td><b>{p.fullName}</b></td><td>{p.type}</td><td>{p.dob || '-'}</td><td>{p.gender || '-'}</td><td>{p.nationality}</td><td>{p.passportNo || <i>not yet</i>}</td><td>{p.passportExpiry || '-'}</td></tr>)}</tbody></table></div>
@@ -68,7 +121,7 @@ export default function BookingWorkspace() {
             <div className="flex space"><span className="route">{f.from} → {f.to}</span><b>{fmtMoney(f.priceTotal, f.currency)}</b></div>
             <p><b>{f.airline} {f.flightNo}</b> · {f.fareClass} · {f.stopover} · 🛫 {f.departDate} {f.departTime} → 🛬 {f.arriveDate} {f.arriveTime} · 🧳 {f.baggage}{f.deadline && <> · Ticket by {f.deadline}</>}</p>
             {f.notes && <p className="muted">{f.notes}</p>}
-            {['UNDER_REVIEW', 'QUOTED'].includes(b.status) && <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => act('deleteFlight', { flightId: f.id })}>Remove flight</button>}
+            {['UNDER_REVIEW', 'QUOTED'].includes(b.status) && <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => act('deleteFlight', { flightId: f.id })}>Remove flight</button>}
           </div>
         ))}
         {totals && Object.entries(totals.byCurrency).map(([c, v]) => (
@@ -101,13 +154,14 @@ export default function BookingWorkspace() {
               <div className="form-group"><label>Currency</label><select className="input" value={flight.currency} onChange={e => setFlight({ ...flight, currency: e.target.value })}>{BUSINESS.currencies.map(c => <option key={c}>{c}</option>)}</select></div>
               <div className="form-group"><label>Notes to customer</label><input className="input" value={flight.notes} onChange={e => setFlight({ ...flight, notes: e.target.value })} /></div>
             </div>
-            <button className="btn btn-primary" disabled={busy} onClick={() => act('addFlight', { flight })}>Add flight</button>
+            <button type="button" className="btn btn-primary" disabled={busy} onClick={() => act('addFlight', { flight })}>Add flight</button>
           </>
         )}
         {b.status === 'UNDER_REVIEW' && (
           <div className="mt">
             <div className="form-group"><label>Quote note to customer (optional)</label><input className="input" value={quoteNote} onChange={e => setQuoteNote(e.target.value)} /></div>
-            <button className="btn btn-success" disabled={busy} onClick={() => act('sendQuote', { note: quoteNote })}>📨 Send quote to customer</button>
+            <button type="button" className="btn btn-success" disabled={busy} onClick={() => act('sendQuote', { note: quoteNote })}>📨 Send quote to customer</button>
+            {auth.mode === 'PREAPPROVED' && <p className="muted small mt">⚡ If the flights above match the customer's approval, this opens payment immediately. For a return trip, add the return flight as its own flight so the app can verify the return date.</p>}
           </div>
         )}
       </div>
@@ -120,8 +174,8 @@ export default function BookingWorkspace() {
             <div className="flex space"><span><b>{fmtMoney(p.amount, p.currency)}</b> · {p.method} · Ref: {p.ref || '-'}<br /><span className="muted small">{fmtDateTime(p.at)} · {p.note}</span></span>
               <span className={`badge b-${p.status === 'CONFIRMED' ? 'CONFIRMED' : p.status}`}>{p.status}</span></div>
             {p.status === 'CLAIMED' && <div className="flex mt">
-              <button className="btn btn-success btn-sm" disabled={busy} onClick={() => act('confirmPayment', { paymentId: p.id })}>✓ Verify & confirm</button>
-              <button className="btn btn-danger btn-sm" disabled={busy} onClick={() => act('rejectPayment', { paymentId: p.id })}>Reject</button></div>}
+              <button type="button" className="btn btn-success btn-sm" disabled={busy} onClick={() => act('confirmPayment', { paymentId: p.id })}>✓ Verify & confirm</button>
+              <button type="button" className="btn btn-danger btn-sm" disabled={busy} onClick={() => act('rejectPayment', { paymentId: p.id })}>Reject</button></div>}
           </div>
         ))}
         {['AWAITING_PAYMENT', 'CONFIRMED'].includes(b.status) && (
@@ -133,7 +187,7 @@ export default function BookingWorkspace() {
               <div className="form-group"><label>Currency</label><select className="input" value={pay.currency} onChange={e => setPay({ ...pay, currency: e.target.value })}>{BUSINESS.currencies.map(c => <option key={c}>{c}</option>)}</select></div>
             </div>
             <div className="form-group"><label>Transaction reference</label><input className="input" value={pay.txnRef} onChange={e => setPay({ ...pay, txnRef: e.target.value })} /></div>
-            <button className="btn btn-primary" disabled={busy} onClick={() => act('recordPayment', pay)}>Record payment</button>
+            <button type="button" className="btn btn-primary" disabled={busy} onClick={() => act('recordPayment', pay)}>Record payment</button>
           </>
         )}
       </div>
@@ -147,7 +201,7 @@ export default function BookingWorkspace() {
             <div className="form-group" key={p.id}><label>E-ticket number — {p.fullName} *</label>
               <input className="input" value={ticketNos[i] || ''} onChange={e => setTicketNos(ns => ns.map((n, j) => (j === i ? e.target.value : n)))} placeholder="e.g. 071-2345678901" /></div>
           ))}
-          <button className="btn btn-success" disabled={busy} onClick={() => act('issueTicket', { pnr, ticketNumbers: ticketNos.map(n => ({ ticketNo: n })) })}>🎫 Mark ticket issued</button>
+          <button type="button" className="btn btn-success" disabled={busy} onClick={() => act('issueTicket', { pnr, ticketNumbers: ticketNos.map(n => ({ ticketNo: n })) })}>🎫 Mark ticket issued</button>
         </div>
       )}
       {b.status === 'ISSUED' && b.ticket && (
@@ -170,7 +224,7 @@ export default function BookingWorkspace() {
           <select className="input" style={{ maxWidth: 190 }} value={msg.channel} onChange={e => setMsg({ ...msg, channel: e.target.value })}>
             <option value="CUSTOMER">To customer</option><option value="INTERNAL">Internal note</option></select>
           <input className="input" style={{ flex: 1 }} value={msg.text} onChange={e => setMsg({ ...msg, text: e.target.value })} placeholder="Write…" />
-          <button className="btn btn-primary" disabled={busy || !msg.text.trim()} onClick={() => act('message', msg)}>Send</button>
+          <button type="button" className="btn btn-primary" disabled={busy || !msg.text.trim()} onClick={() => act('message', msg)}>Send</button>
         </div>
       </div>
 
@@ -179,7 +233,7 @@ export default function BookingWorkspace() {
           <h2>Cancel booking</h2>
           <div className="flex">
             <input className="input" style={{ flex: 1 }} placeholder="Reason" value={cancelReason} onChange={e => setCancelReason(e.target.value)} />
-            <button className="btn btn-danger" disabled={busy} onClick={() => { if (window.confirm('Cancel this booking?')) act('cancel', { reason: cancelReason }); }}>Cancel booking</button>
+            <button type="button" className="btn btn-danger" disabled={busy} onClick={() => { if (window.confirm('Cancel this booking?')) act('cancel', { reason: cancelReason }); }}>Cancel booking</button>
           </div>
         </div>
       )}

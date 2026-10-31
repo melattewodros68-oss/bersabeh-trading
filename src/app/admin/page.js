@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { api, fmtMoney, fmtDateTime } from '@/lib/client.js';
+import { api, fmtMoney, fmtDateTime, PAGE_REFRESH_EVENT } from '@/lib/client.js';
 import { statusLabel } from '@/lib/i18n.js';
 
 export default function AdminPage() {
@@ -19,15 +19,34 @@ export default function AdminPage() {
     try {
       const [s, u] = await Promise.all([api('/api/admin/stats'), api('/api/admin/users')]);
       setStats(s.stats); setRecent(s.recent); setUsers(u.users);
-    } catch (e) { setError(e.message); }
-  }, []);
+    } catch (e) { if (e.status === 401) router.push('/login'); else setError(e.message); }
+  }, [router]);
 
+  const loadMe = useCallback(async () => {
+    try {
+      const d = await api('/api/auth/me');
+      if (d.user.role !== 'ADMIN') { setError('Admins only.'); return null; }
+      setMe(d.user); return d.user;
+    } catch (e) {
+      if (e.status === 401) { router.push('/login'); return null; }
+      setError('Could not check your login (server may be waking up). Check your connection, then tap ↻ Refresh at the top.');
+      return null;
+    }
+  }, [router]);
+
+  useEffect(() => { loadMe().then(user => { if (user) load(); }); }, [loadMe, load]);
+
+  const refreshData = useCallback(async () => {
+    setError('');
+    if (me) { await load(); return; }
+    const user = await loadMe();
+    if (user) await load();
+  }, [me, load, loadMe]);
   useEffect(() => {
-    api('/api/auth/me').then(d => {
-      if (d.user.role !== 'ADMIN') { setError('Admins only.'); return; }
-      setMe(d.user); load();
-    }).catch(() => router.push('/login'));
-  }, [load, router]);
+    const onRefresh = (e) => { e.detail.handled = true; e.detail.done = refreshData(); };
+    window.addEventListener(PAGE_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(PAGE_REFRESH_EVENT, onRefresh);
+  }, [refreshData]);
 
   async function createUser(e) {
     e.preventDefault(); setError(''); setMsg('');
@@ -79,9 +98,9 @@ export default function AdminPage() {
                 <option value="AGENT">AGENT</option><option value="ADMIN">ADMIN</option></select></td>
               <td>{u.active ? '✅' : '⛔'}</td><td className="small">{fmtDateTime(u.lastLoginAt)}</td>
               <td><div className="flex">
-                <button className="btn btn-ghost btn-sm" onClick={() => userAction(u.id, u.active ? 'deactivate' : 'activate')}>{u.active ? 'Deactivate' : 'Activate'}</button>
-                <button className="btn btn-ghost btn-sm" onClick={() => { const pw = window.prompt('New temporary password (min 10 chars):'); if (pw) userAction(u.id, 'resetPassword', { newPassword: pw }); }}>Reset pw</button>
-                <button className="btn btn-ghost btn-sm" onClick={() => { const em = window.prompt('New login email for ' + u.fullName + ':', u.email); if (em && em !== u.email) userAction(u.id, 'changeEmail', { newEmail: em }); }}>Change email</button>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => userAction(u.id, u.active ? 'deactivate' : 'activate')}>{u.active ? 'Deactivate' : 'Activate'}</button>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => { const pw = window.prompt('New temporary password (min 10 chars):'); if (pw) userAction(u.id, 'resetPassword', { newPassword: pw }); }}>Reset pw</button>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => { const em = window.prompt('New login email for ' + u.fullName + ':', u.email); if (em && em !== u.email) userAction(u.id, 'changeEmail', { newEmail: em }); }}>Change email</button>
               </div></td></tr>
           ))}</tbody></table></div>
         <h3>Add staff user</h3>
@@ -95,7 +114,7 @@ export default function AdminPage() {
             <div className="form-group"><label>Temporary password (min 10)</label><input className="input" required minLength={10} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></div>
             <div className="form-group"><label>Role</label><select className="input" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}><option value="AGENT">AGENT</option><option value="ADMIN">ADMIN</option></select></div>
           </div>
-          <button className="btn btn-primary">Create user</button>
+          <button type="submit" className="btn btn-primary">Create user</button>
         </form>
       </div>
     </>

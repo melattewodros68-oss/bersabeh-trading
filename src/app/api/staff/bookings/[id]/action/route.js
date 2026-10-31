@@ -1,6 +1,6 @@
 import { readDB, writeDB } from '../../../../../../lib/store.js';
 import { requireStaff, jsonError, jsonOk } from '../../../../../../lib/auth.js';
-import { STATUS, uid, clean, money, audit, addMessage, totals } from '../../../../../../lib/domain.js';
+import { STATUS, uid, clean, money, audit, addMessage, totals, evaluatePreapproval, newAccessToken } from '../../../../../../lib/domain.js';
 import { BUSINESS } from '../../../../../../lib/config.js';
 
 function canMutate(user, booking) {
@@ -29,7 +29,10 @@ export async function POST(req, context) {
   const actor = user.email;
   const now = new Date().toISOString();
 
-  if (action === 'assign') {
+  if (action === 'newLink') {
+    booking.accessToken = newAccessToken()
+    audit(booking, actor, 'LIVE_LINK_RENEWED', 'Previous customer live link disabled and a new one created');
+  } else if (action === 'assign') {
     if (booking.assignedTo && booking.assignedTo !== user.email && user.role !== 'ADMIN') return jsonError('Already assigned to another agent.', 409);
     const target = user.role === 'ADMIN' && body?.agentEmail ? clean(body.agentEmail, 200).toLowerCase() : user.email;
     if (user.role === 'ADMIN' && body?.agentEmail && !db.users.some(u => u.email.toLowerCase() === target && u.active)) return jsonError('Target agent not found or inactive.');
@@ -52,22 +55,43 @@ export async function POST(req, context) {
     if (!flight.airline || !flight.flightNo || !flight.from || !flight.to || !flight.departDate) return jsonError('Flight needs airline, flight number, route and departure date.');
     if (!Number.isFinite(priceTotal) || priceTotal <= 0) return jsonError('Total price must be greater than zero.');
     booking.flights.push(flight);
+    booking.approvalCheck = null;
     audit(booking, actor, 'FLIGHT_ADDED', `${flight.airline} ${flight.flightNo} ${flight.from}->${flight.to} ${priceTotal} ${flight.currency} (total, all passengers)`);
     if (booking.status === STATUS.QUOTED) addMessage(booking, user.role, actor, 'CUSTOMER', 'We have updated your flight offer — please review the itinerary and total below.');
   } else if (action === 'deleteFlight') {
     if (![STATUS.UNDER_REVIEW, STATUS.QUOTED].includes(booking.status)) return jsonError('Flights cannot be changed at this stage.');
     booking.flights = (booking.flights || []).filter(f => f.id !== body?.flightId);
+    booking.approvalCheck = null;
     audit(booking, actor, 'FLIGHT_REMOVED', String(body?.flightId || ''));
   } else if (action === 'sendQuote') {
     if (booking.status !== STATUS.UNDER_REVIEW) return jsonError('Quote can only be sent from Under review.');
     if (!(booking.flights || []).length) return jsonError('Add at least one flight before sending a quote.');
-    booking.status = STATUS.QUOTED;
-    audit(booking, actor, 'QUOTE_SENT');
     const note = clean(body?.note, 1000);
     const t = totals(booking);
     const totalText = Object.entries(t.byCurrency).map(([c, v]) => `${v.quoted} ${c}`).join(', ');
-    addMessage(booking, user.role, actor, 'CUSTOMER',
-      `Your flight quote is ready. Total for all passengers: ${totalText}. Please review the full itinerary on this page and Accept to proceed to payment.${note ? ' Agent note: ' + note : ''}`);
+    if (!booking.accessToken) booking.accessToken = newAccessToken()
+    const check = evaluatePreapproval(booking);
+    booking.approvalCheck = check;
+    audit(booking, actor, 'QUOTE_SENT', totalText);
+    if (check.eligible) {
+      booking.status = STATUS.AWAITING_PAYMENT;
+      booking.autoApprovedAt = now;
+      audit(booking, 'customer', 'QUOTE_AUTO_APPROVED',
+        `Quote ${totalText} matched the customer's approval up to ${check.maxTotal} ${check.currency}`);
+      addMessage(booking, user.role, actor, 'CUSTOMER',
+        `Good news: your flight matches the approval you gave us. Total for all passengers: ${totalText}. No separate Accept step is needed. Please pay the exact total using Telebirr or CBE, then enter the transaction reference on this same page.${note ? ' Agent note: ' + note : ''}`);
+    } else {
+      booking.status = STATUS.QUOTED;
+      booking.autoApprovedAt = null;
+      if (check.mode === 'PREAPPROVED') {
+        audit(booking, actor, 'QUOTE_PREAPPROVAL_NOT_MATCHED', check.reasons.join('; '));
+        addMessage(booking, user.role, actor, 'CUSTOMER',
+          `Your flight quote is ready, but something is different from the approval you gave us. Total for all passengers: ${totalText}. Please review the itinerary on this page and Accept only if you agree.${note ? ' Agent note: ' + note : ''}`);
+      } else {
+        addMessage(booking, user.role, actor, 'CUSTOMER',
+          `Your flight quote is ready. Total for all passengers: ${totalText}. Please review the full itinerary on this page and Accept to proceed to payment.${note ? ' Agent note: ' + note : ''}`);
+      }
+    }
   } else if (action === 'recordPayment') {
     if (![STATUS.AWAITING_PAYMENT, STATUS.CONFIRMED].includes(booking.status)) return jsonError('Payments can only be recorded after the customer accepted the quote.');
     const amount = money(body?.amount);

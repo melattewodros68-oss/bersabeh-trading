@@ -1,14 +1,15 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { api } from '@/lib/client.js';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { api, PAGE_REFRESH_EVENT } from '@/lib/client.js';
 import { statusLabel } from '@/lib/i18n.js';
 
 const STATUSES = ['', 'NEW', 'UNDER_REVIEW', 'QUOTED', 'AWAITING_PAYMENT', 'CONFIRMED', 'ISSUED', 'CANCELLED'];
 
-export default function StaffPage() {
+function StaffInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [me, setMe] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [counts, setCounts] = useState({});
@@ -23,23 +24,53 @@ export default function StaffPage() {
     try {
       const d = await api(`/api/staff/bookings?scope=${scope}&q=${encodeURIComponent(q)}&status=${status}`);
       setBookings(d.bookings); setCounts(d.counts);
-    } catch (e) { setError(e.message); }
-  }, [scope, q, status]);
+    } catch (e) {
+      if (e.status === 401) router.push('/login'); else setError(e.message);
+    }
+  }, [scope, q, status, router]);
 
-  useEffect(() => {
-    api('/api/auth/me').then(d => setMe(d.user)).catch(() => router.push('/login'));
+  // Only a true "not logged in" (401) sends staff to the login page.
+  // A sleeping server / network hiccup stays here with a clear error.
+  const loadMe = useCallback(async () => {
+    try { const d = await api('/api/auth/me'); setMe(d.user); return d.user; }
+    catch (e) {
+      if (e.status === 401) { router.push('/login'); return null; }
+      setError('Could not check your login (server may be waking up). Check your connection, then tap ↻ Refresh at the top.');
+      return null;
+    }
   }, [router]);
+
+  useEffect(() => { loadMe(); }, [loadMe]);
   useEffect(() => {
-    const sc = new URLSearchParams(window.location.search).get('scope');
+    const sc = searchParams.get('scope');
     if (['new', 'mine', 'all'].includes(sc)) setScope(sc);
+  }, [searchParams]);
+  useEffect(() => {
     const onScope = (e) => { if (['new', 'mine', 'all'].includes(e.detail)) setScope(e.detail); };
     window.addEventListener('bt-scope', onScope);
     return () => window.removeEventListener('bt-scope', onScope);
   }, []);
   useEffect(() => { if (me) load(); }, [me, load]);
 
+  const refreshData = useCallback(async () => {
+    setError('');
+    if (me) { await load(); return; }
+    const user = await loadMe();
+    if (user) await load();
+  }, [me, load, loadMe]);
+  useEffect(() => {
+    const onRefresh = (e) => { e.detail.handled = true; e.detail.done = refreshData(); };
+    window.addEventListener(PAGE_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(PAGE_REFRESH_EVENT, onRefresh);
+  }, [refreshData]);
+
+  const chooseScope = (s) => {
+    setScope(s);
+    router.replace('/staff?scope=' + s, { scroll: false });
+  };
+
   async function take(id) {
-    try { await api(`/api/staff/bookings/${id}/action`, { method: 'POST', body: { action: 'assign' } }); setScope('mine'); }
+    try { await api(`/api/staff/bookings/${id}/action`, { method: 'POST', body: { action: 'assign' } }); chooseScope('mine'); }
     catch (e) { setError(e.message); }
   }
   async function changePassword(e) {
@@ -48,7 +79,9 @@ export default function StaffPage() {
     catch (err) { setPwMsg('❌ ' + err.message); }
   }
 
-  if (!me) return <div className="spinner" />;
+  if (!me) return error
+    ? <div className="card"><div className="error">{error}</div></div>
+    : <div className="spinner" />;
   return (
     <>
       <div className="flex space"><h1 style={{ fontSize: '1.5rem' }}>Staff dashboard</h1><span className="muted">{me.fullName} · {me.role}</span></div>
@@ -65,7 +98,7 @@ export default function StaffPage() {
       <div className="card">
         <div className="tabs">
           {[['new', 'New requests'], ['mine', 'Mine'], ...(me.role === 'ADMIN' ? [['all', 'All bookings']] : [])].map(([s, label]) => (
-            <button key={s} className={`tab ${scope === s ? 'active' : ''}`} onClick={() => setScope(s)}>{label}</button>
+            <button type="button" key={s} className={`tab ${scope === s ? 'active' : ''}`} onClick={() => chooseScope(s)}>{label}</button>
           ))}
         </div>
         <div className="row">
@@ -79,13 +112,13 @@ export default function StaffPage() {
         {bookings.map(b => (
           <div className="list-item" key={b.id}>
             <div className="flex space">
-              <span><b>{b.ref}</b> · {b.name} · {b.from} → {b.to}<br />
+              <span><b>{b.ref}</b>{b.preapproved && <span className="badge b-CONFIRMED" style={{ marginLeft: 6 }}>⚡ Pre-approved</span>} · {b.name} · {b.from} → {b.to}<br />
                 <span className="muted small">{b.departDate} · {b.passengers} pax · {b.phone} · {b.assignedTo || 'Unassigned'}</span></span>
               <span className={`badge b-${b.status}`}>{statusLabel('en', b.status)}</span>
             </div>
             <div className="flex mt">
               <Link className="btn btn-outline btn-sm" href={`/staff/bookings/${b.id}`}>Open workspace</Link>
-              {b.status === 'NEW' && !b.assignedTo && <button className="btn btn-primary btn-sm" onClick={() => take(b.id)}>Take request</button>}
+              {b.status === 'NEW' && !b.assignedTo && <button type="button" className="btn btn-primary btn-sm" onClick={() => take(b.id)}>Take request</button>}
             </div>
           </div>
         ))}
@@ -99,8 +132,12 @@ export default function StaffPage() {
           <div className="form-group"><label>New password (min 10 characters)</label>
             <input className="input" type="password" required minLength={10} value={pw.newPassword} onChange={e => setPw({ ...pw, newPassword: e.target.value })} /></div>
         </div>
-        <button className="btn btn-primary btn-sm">Change password</button>
+        <button type="submit" className="btn btn-primary btn-sm">Change password</button>
       </form>
     </>
   );
+}
+
+export default function StaffPage() {
+  return <Suspense fallback={<div className="spinner" />}><StaffInner /></Suspense>;
 }

@@ -1,23 +1,38 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLang } from './Lang.jsx';
-import { api } from '@/lib/client.js';
+import RefreshButton from './RefreshButton.jsx';
+import { api, PAGE_REFRESH_EVENT } from '@/lib/client.js';
 import { BUSINESS } from '@/lib/config.js';
 
 export default function Header() {
   const { lang, setLang, t } = useLang();
-  const [me, setMe] = useState(null);
+  // undefined = login state still loading (render a placeholder so the
+  // "Staff login" link is never swapped for "Staff dashboard" mid-tap).
+  const [me, setMe] = useState(undefined);
   const [menuOpen, setMenuOpen] = useState(false);
   const [counts, setCounts] = useState(null);
   const pathname = usePathname() || '/';
   const router = useRouter();
 
+  const loadMe = useCallback(async () => {
+    try { const d = await api('/api/auth/me'); setMe(d.user); }
+    catch { setMe(null); }
+  }, []);
+
   useEffect(() => {
-    api('/api/auth/me').then(d => setMe(d.user)).catch(() => setMe(null));
+    loadMe();
     setMenuOpen(false);
-  }, [pathname]);
+  }, [pathname, loadMe]);
+
+  // Global Refresh: also re-check login state + menu counts.
+  useEffect(() => {
+    const onRefresh = () => { loadMe(); };
+    window.addEventListener(PAGE_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(PAGE_REFRESH_EVENT, onRefresh);
+  }, [loadMe]);
 
   useEffect(() => {
     if (menuOpen && me) api('/api/staff/bookings?scope=mine').then(d => setCounts(d.counts)).catch(() => {});
@@ -41,11 +56,23 @@ export default function Header() {
     setMenuOpen(false);
     if (pathname === '/staff') {
       window.dispatchEvent(new CustomEvent('bt-scope', { detail: scope }));
-      window.history.replaceState(null, '', '/staff?scope=' + scope);
+      // Use Next's router (not raw history.replaceState) so the router's
+      // internal history state stays valid for later navigations.
+      router.replace('/staff?scope=' + scope, { scroll: false });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       router.push('/staff?scope=' + scope);
     }
+  };
+
+  // "On this page" shortcuts: scroll in place. Never navigate to another
+  // route; keep the exact current pathname and only update the hash.
+  const jumpToSection = (hash) => {
+    setMenuOpen(false);
+    window.history.replaceState(window.history.state, '', pathname + hash);
+    window.requestAnimationFrame(() => {
+      document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   let sections = [];
@@ -74,16 +101,19 @@ export default function Header() {
           )}
           <Link className={cls('/')} href="/">{t('nav_home')}</Link>
           <Link className={cls('/track')} href="/track">{t('nav_track')}</Link>
-          {me ? (
+          {me === undefined ? (
+            <span className="nav-auth-loading" aria-hidden="true">···</span>
+          ) : me ? (
             <>
               <Link className={pathname.startsWith('/staff') ? 'active' : ''} href="/staff">{t('nav_dashboard')}</Link>
               {me.role === 'ADMIN' && <Link className={cls('/admin')} href="/admin">{t('nav_admin')}</Link>}
-              <button className="btn btn-ghost btn-sm" onClick={logout}>{t('logout')} ({me.fullName?.split(' ')[0]})</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={logout}>{t('logout')} ({me.fullName?.split(' ')[0]})</button>
             </>
           ) : (
             <Link className={cls('/login')} href="/login">{t('nav_staff')}</Link>
           )}
-          <button className="lang-btn" onClick={() => setLang(lang === 'en' ? 'am' : 'en')}>
+          <RefreshButton />
+          <button type="button" className="lang-btn" onClick={() => setLang(lang === 'en' ? 'am' : 'en')}>
             {lang === 'en' ? 'አማርኛ' : 'English'}
           </button>
         </nav>
@@ -119,7 +149,7 @@ export default function Header() {
               <>
                 <h4>On this page</h4>
                 {sections.map(([href, label]) => (
-                  <a key={href} className="drawer-link" href={href} onClick={() => setMenuOpen(false)}>{label}</a>
+                  <button key={href} type="button" className="drawer-link" onClick={() => jumpToSection(href)}>{label}</button>
                 ))}
               </>
             )}

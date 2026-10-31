@@ -1,16 +1,16 @@
 // ===== EDIT THESE WITH YOUR REAL BUSINESS DETAILS BEFORE LAUNCH =====
 export const BUSINESS = {
-  name: 'Bersabeh Trading plc',
+  name: 'Bersabeh Trading',
   tagline: 'Flight ticket office — Addis Ababa',
-  phone: '+251 911248033',
-  whatsapp: '+251911248033',
-  email: 'bersabehtradingplc@gmail.com',
-  address: 'Kazanchis,Zema Bld. Addis Ababa, Ethiopia',
-  hours: 'Mon–Sat 2:00–11:30 local time',
+  phone: '+251 911 234 567',
+  whatsapp: '+251911234567',
+  email: 'info@example.com',
+  address: 'Bole, Addis Ababa, Ethiopia',
+  hours: 'Mon–Sat 8:30–18:00',
   // Shown to the customer at payment stage. Replace with real accounts.
   paymentAccounts: [
-    { method: 'Telebirr', label: 'Telebirr — Bersabeh Trading plc', detail: '0911248033  (edit in src/lib/config.js)' },
-    { method: 'CBE', label: 'Awash Bank — Bersabeh Trading plc', detail: '01204436947300 (edit in src/lib/config.js)' },
+    { method: 'Telebirr', label: 'Telebirr — Bersabeh Trading', detail: '09XX XXX XXX (edit in src/lib/config.js)' },
+    { method: 'CBE', label: 'Commercial Bank of Ethiopia — Bersabeh Trading', detail: '1000XXXXXXXXX (edit in src/lib/config.js)' },
     { method: 'Bank Transfer', label: 'Other bank transfer / cash at office', detail: 'Call or WhatsApp us and keep your receipt' },
   ],
   currencies: ['ETB', 'USD', 'EUR', 'GBP', 'AED'],

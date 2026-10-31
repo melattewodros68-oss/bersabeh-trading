@@ -1,7 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/client.js';
+import { api, PAGE_REFRESH_EVENT } from '@/lib/client.js';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -9,6 +9,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // Refresh with typed credentials asks first instead of wiping them.
+  useEffect(() => {
+    const onRefresh = (e) => {
+      if ((email || password) && !window.confirm('Refresh this page? The email/password you typed will be cleared.')) {
+        e.detail.handled = true; e.detail.done = Promise.resolve();
+      }
+    };
+    window.addEventListener(PAGE_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(PAGE_REFRESH_EVENT, onRefresh);
+  }, [email, password]);
 
   async function submit(e) {
     e.preventDefault(); setError(''); setBusy(true);
@@ -31,7 +42,7 @@ export default function LoginPage() {
           <input id="email" className="input" type="email" required autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} /></div>
         <div className="form-group"><label htmlFor="pw">Password</label>
           <input id="pw" className="input" type="password" required autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></div>
-        <button className="btn btn-primary" disabled={busy}>{busy ? 'Logging in…' : 'Log in'}</button>
+        <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? 'Logging in…' : 'Log in'}</button>
       </form>
       <div className="notice mt small">
         Staff only. If you need an account, ask your office administrator.

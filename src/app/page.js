@@ -1,8 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useLang } from '@/components/Lang.jsx';
-import { api } from '@/lib/client.js';
+import { api, PAGE_REFRESH_EVENT } from '@/lib/client.js';
 import { BUSINESS } from '@/lib/config.js';
 
 const emptyPax = () => ({ fullName: '', dob: '', gender: 'Female', nationality: 'Ethiopian', passportNo: '', passportExpiry: '', type: 'ADULT' });
@@ -13,17 +13,46 @@ export default function HomePage() {
   const [contact, setContact] = useState({ name: '', phone: '', email: '' });
   const [trip, setTrip] = useState({ type: 'return', from: 'ADD — Addis Ababa Bole (ADD)', to: '', departDate: '', returnDate: '', cabin: 'Economy', notes: '' });
   const [passengers, setPassengers] = useState([emptyPax()]);
+  const [authorization, setAuthorization] = useState({ mode: 'ASK', maxTotal: '', currency: 'ETB', dateFlexibilityDays: 0, directOnly: false });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [ref, setRef] = useState('');
+  const [token, setToken] = useState('');
 
   const setPax = (i, key, value) => setPassengers(ps => ps.map((p, j) => (j === i ? { ...p, [key]: value } : p)));
 
+  // Refresh protection: never wipe the success screen's booking
+  // reference, and ask before clearing a half-filled request form.
+  const formDirty = Boolean(
+    contact.name || contact.phone || contact.email
+    || trip.to || trip.departDate || trip.returnDate || trip.notes
+    || trip.type !== 'return' || trip.from !== 'ADD — Addis Ababa Bole (ADD)' || trip.cabin !== 'Economy'
+    || passengers.length !== 1
+    || passengers.some(p => p.fullName || p.dob || p.passportNo || p.passportExpiry
+      || p.type !== 'ADULT' || p.gender !== 'Female' || p.nationality !== 'Ethiopian')
+    || authorization.mode !== 'ASK' || authorization.maxTotal || authorization.directOnly
+    || Number(authorization.dateFlexibilityDays) !== 0 || authorization.currency !== 'ETB'
+  );
+  useEffect(() => {
+    const onRefresh = (e) => {
+      if (ref) { e.detail.handled = true; e.detail.done = Promise.resolve(); return; }
+      if (formDirty && !window.confirm('Refresh this page? Details you have typed but not sent will be cleared.')) {
+        e.detail.handled = true; e.detail.done = Promise.resolve();
+      }
+    };
+    window.addEventListener(PAGE_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(PAGE_REFRESH_EVENT, onRefresh);
+  }, [ref, formDirty]);
+
   async function submit(e) {
-    e.preventDefault(); setError(''); setBusy(true);
+    e.preventDefault(); setError('');
+    if (authorization.mode === 'PREAPPROVED' && !(Number(authorization.maxTotal) > 0)) { setError(t('max_required')); return; }
+    setBusy(true);
     try {
-      const data = await api('/api/public/bookings', { method: 'POST', body: { contact, trip, passengers, language: lang } });
+      const data = await api('/api/public/bookings', { method: 'POST', body: { contact, trip, passengers, authorization, language: lang } });
       setRef(data.ref);
+      setToken(data.accessToken || '');
+      try { if (data.accessToken) localStorage.setItem(`bersabeh_booking_${data.ref}`, data.accessToken); } catch {}
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) { setError(err.message); } finally { setBusy(false); }
   }
@@ -33,9 +62,10 @@ export default function HomePage() {
       <div className="success"><h2 style={{ border: 'none', margin: 0, color: 'inherit' }}>✅ {t('success_title')}</h2></div>
       <p>{t('success_body')}</p>
       <p className="mt">{t('your_ref')}:<br /><span className="ref-big">{ref}</span></p>
+      <p className="warn">{t('save_link_hint')}</p>
       <div className="flex mt">
-        <Link className="btn btn-primary" href={`/track?ref=${encodeURIComponent(ref)}`}>{t('track_now')}</Link>
-        <button className="btn btn-outline" onClick={() => { setRef(''); }}>{t('new_request')}</button>
+        <Link className="btn btn-primary" href={token ? `/track?t=${encodeURIComponent(token)}` : `/track?ref=${encodeURIComponent(ref)}`}>{t('track_now')}</Link>
+        <button type="button" className="btn btn-outline" onClick={() => { setRef(''); setToken(''); }}>{t('new_request')}</button>
       </div>
     </div>
   );
@@ -142,6 +172,38 @@ export default function HomePage() {
           </div>
         ))}
         {passengers.length < 9 && <button type="button" className="btn btn-outline btn-sm" onClick={() => setPassengers(ps => [...ps, emptyPax()])}>{t('add_passenger')}</button>}
+
+        <h2><span className="step-no">4</span>{t('fast_track')}</h2>
+        <p className="muted">{t('approve_body')}</p>
+        <div className="approval-options">
+          <label className="approval-option">
+            <input type="radio" name="approval-mode" checked={authorization.mode === 'ASK'} onChange={() => setAuthorization(a => ({ ...a, mode: 'ASK' }))} />
+            <span>{t('ask_me_first')}</span>
+          </label>
+          <label className="approval-option">
+            <input type="radio" name="approval-mode" checked={authorization.mode === 'PREAPPROVED'} onChange={() => setAuthorization(a => ({ ...a, mode: 'PREAPPROVED' }))} />
+            <span>{t('approve_now')}</span>
+          </label>
+        </div>
+        {authorization.mode === 'PREAPPROVED' && (
+          <div className="approval-box">
+            <div className="row3">
+              <div className="form-group"><label htmlFor="max-total">{t('max_total')} *</label>
+                <input id="max-total" className="input" type="number" min="1" step="0.01" inputMode="decimal" placeholder="e.g. 45000"
+                  value={authorization.maxTotal} onChange={e => setAuthorization(a => ({ ...a, maxTotal: e.target.value }))} /></div>
+              <div className="form-group"><label>{t('currency')}</label>
+                <select className="input" value={authorization.currency} onChange={e => setAuthorization(a => ({ ...a, currency: e.target.value }))}>
+                  {BUSINESS.currencies.map(c => <option key={c} value={c}>{c}</option>)}
+                </select></div>
+              <div className="form-group"><label>{t('date_flex')}</label>
+                <select className="input" value={authorization.dateFlexibilityDays} onChange={e => setAuthorization(a => ({ ...a, dateFlexibilityDays: Number(e.target.value) }))}>
+                  <option value={0}>{t('exact_dates')}</option><option value={1}>{t('plus_minus_1')}</option><option value={3}>{t('plus_minus_3')}</option>
+                </select></div>
+            </div>
+            <label className="check-row"><input type="checkbox" checked={authorization.directOnly} onChange={e => setAuthorization(a => ({ ...a, directOnly: e.target.checked }))} /> {t('direct_only')}</label>
+            <p className="warn">{t('approve_warn')}</p>
+          </div>
+        )}
 
         <div className="form-group mt"><label htmlFor="notes">{t('notes')}</label>
           <textarea id="notes" className="input" rows={3} placeholder={t('notes_ph')} value={trip.notes} onChange={e => setTrip({ ...trip, notes: e.target.value })} /></div>

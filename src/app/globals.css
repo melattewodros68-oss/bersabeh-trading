@@ -149,3 +149,46 @@ td{padding:.62rem;border-bottom:1px solid var(--gray-200);vertical-align:top}
 .install-text span{font-size:.86rem;color:var(--gray-600)}
 .install-close{background:transparent;border:none;font-size:1.15rem;cursor:pointer;padding:.45rem;color:var(--gray-600)}
 @media(max-width:900px){.staff-nav a,.staff-nav .btn-ghost{display:none}.staff-nav .menu-btn,.staff-nav .lang-btn{display:inline-flex}}
+
+/* v1.6: global Refresh button, stable auth slot, bigger tap targets */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;text-align:center}
+.nav a{display:inline-flex;align-items:center;min-height:44px}
+.nav .btn,.nav .lang-btn,.tab,.chip{min-height:44px}
+.nav-auth-loading{display:inline-flex;align-items:center;justify-content:center;min-width:108px;min-height:44px;padding:.5rem .9rem;border-radius:999px;background:var(--gray-100);color:var(--gray-600);font-weight:800}
+.refresh-btn{display:inline-flex;align-items:center;justify-content:center;gap:.38rem;min-height:44px;padding:.5rem .95rem;border-radius:999px;border:2px solid var(--primary);background:#fff;color:var(--primary-dark);font-family:inherit;font-size:.9rem;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(11,110,79,.14);transition:all .2s}
+.refresh-btn:hover:not(:disabled){background:var(--primary);color:#fff}
+.refresh-btn:disabled{opacity:.65;cursor:wait}
+.refresh-icon{display:inline-block;font-size:1.18rem;line-height:1;font-weight:900}
+.refresh-btn.is-refreshing .refresh-icon{animation:spin .8s linear infinite}
+@media(max-width:900px){.staff-nav .refresh-btn{display:inline-flex}}
+@media(max-width:540px){.refresh-label{display:none}.refresh-btn{width:44px;padding:0}.nav-auth-loading{min-width:64px}}
+/* Keep staff phone header uncluttered: Menu + Refresh + language only. */
+@media(max-width:900px){.staff-nav a,.staff-nav .btn-ghost{display:none}.staff-nav .menu-btn,.staff-nav .lang-btn,.staff-nav .refresh-btn{display:inline-flex}}
+
+/* v1.7: guided one-page booking, approve-now box, live link, payment helpers */
+.warn{background:#fff7d6;color:#6b4e00;border:1.5px solid #f5d66b;border-radius:10px;padding:.6rem .75rem;margin:.6rem 0}
+.warn.small{font-size:.85rem}
+.approval-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.75rem;margin-bottom:1rem}
+.approval-option{display:flex;gap:.65rem;align-items:flex-start;border:2px solid var(--gray-200);border-radius:13px;padding:.85rem .95rem;background:#fff;font-weight:800;cursor:pointer}
+.approval-option input{width:20px;height:20px;flex-shrink:0;margin-top:.12rem;accent-color:var(--primary)}
+.approval-option:has(input:checked){border-color:var(--primary);background:#effaf4;box-shadow:0 0 0 3px rgba(11,110,79,.12)}
+.approval-box{border:2px solid var(--gold);border-left:7px solid var(--gold);border-radius:14px;padding:1rem;background:linear-gradient(180deg,#fffdf2,#fff);margin-bottom:1rem}
+.check-row{display:flex;gap:.55rem;align-items:center;font-weight:800;cursor:pointer;margin:.35rem 0 .7rem}
+.check-row input{width:20px;height:20px;accent-color:var(--primary)}
+.next-step{border:2px solid var(--green);border-left:8px solid var(--gold);background:linear-gradient(90deg,#effaf4,#fff9db);border-radius:14px;padding:.95rem 1rem;margin:0 0 1rem}
+.next-step p{margin:.35rem 0 0}
+.success-text{color:#05603a;font-weight:800}
+.live-box{border:2px solid var(--gray-200);border-radius:14px;padding:.95rem 1rem;margin:0 0 1rem;background:#fff}
+.live-box p{margin:.4rem 0}
+.due-grid,.account-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem;margin:0 0 1rem}
+.due-card,.account-card{border:2px solid var(--gray-200);border-radius:14px;padding:.9rem;background:#fff;display:flex;flex-direction:column;gap:.5rem;align-items:flex-start}
+.due-card{border-color:var(--red);background:#fff5f5}
+.due-card b{font-size:1.45rem;color:var(--primary-dark)}
+.account-card span{word-break:break-word}
+.reason-list{margin:.2rem 0 .8rem;padding-left:1.25rem}
+.auth-box{border:2px solid var(--gold);border-radius:13px;padding:.9rem 1rem;background:#fffdf2;margin:0 0 1rem}
+.auth-box p{margin:.35rem 0}
+.check-ok{color:#05603a;font-weight:800}.check-bad{color:#991b1b;font-weight:800}
+.link-box{border:2px dashed var(--primary);border-radius:13px;padding:.9rem 1rem;background:#effaf4;margin:0 0 1rem}
+.link-url{word-break:break-all;font-size:.82rem;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:.5rem .6rem;margin:.5rem 0}
+@media(max-width:540px){.approval-options,.due-grid,.account-grid{grid-template-columns:1fr}.next-step,.live-box{padding:.85rem}}

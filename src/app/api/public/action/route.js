@@ -6,7 +6,7 @@ import { BUSINESS } from '../../../../lib/config.js';
 export async function POST(req) {
   let body; try { body = await req.json(); } catch { return jsonError('Invalid request body'); }
   const db = await readDB();
-  const booking = verifyOwnership(db, body?.ref, body?.email);
+  const booking = verifyOwnership(db, body?.ref, body?.email, body?.token);
   if (!booking) return jsonError('Booking not found.', 404);
   const action = body?.action;
   const now = new Date().toISOString();
