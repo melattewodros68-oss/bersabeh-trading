@@ -2,7 +2,7 @@
    APIs, staff/admin pages and Next.js router (RSC) requests are NEVER
    intercepted or cached, so in-app button/link navigation always talks
    to the live server and can never be served a stale screen. */
-const VERSION = 'bersabeh-v1.7-1';
+const VERSION = 'bersabeh-v1.7.1-1';
 const CORE = [
   '/', '/track', '/login', '/manifest.webmanifest',
   '/logo-wing.png', '/hero-et.jpg',
